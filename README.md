@@ -34,12 +34,10 @@ The User Component package provides a convenient way of managing application's u
 
 ### Composer
 
-To include the package in your project, you must modify your `composer.json` file and run `composer update`.
+To include the package in your project, Please run following command.
 
 ```
-"require": {
-    "codersvn/usermanagement": "^1.0"
-}
+composer require codersvn/usermanagement
 ```
 Once the package is installed, the next step is dependant on which framework you are using.
 
@@ -76,7 +74,7 @@ You also need to define `route` in `bootstrapp/app.php`.
 ```php
 $app->router->group([
 ], function ($router) {
-    require __DIR__ . '/vendor/codersvn/usermanagement/src/routes.php';
+    require __DIR__ . '/../vendor/codersvn/usermanagement/src/routes.php';
 });
 ```
 
