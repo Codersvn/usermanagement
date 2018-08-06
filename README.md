@@ -1,0 +1,580 @@
+# User Component for Laravel and Lumen
+
+The User Component package provides a convenient way of managing application's users.
+
+## Table of content
+
+- [User Component for Laravel and Lumen](#user-component-for-laravel-and-lumen)
+    - [Table of content](#table-of-content)
+    - [Installation](#installation)
+        - [Composer](#composer)
+        - [Service provider](#service-provider)
+            - [Laravel](#laravel)
+            - [Lumen](#lumen)
+        - [Config and Migration](#config-and-migration)
+            - [Laravel](#laravel)
+            - [Lumen](#lumen)
+        - [Environment](#environment)
+    - [Configuration](#configuration)
+        - [URL Namespace](#url-namespace)
+        - [User Model](#user-model)
+        - [User Transformer](#user-transformer)
+            - [Laravel](#laravel)
+            - [Lumen](#lumen)
+    - [User Model](#user-model)
+        - [User Schema](#user-schema)
+        - [User Management](#user-management)
+    - [APIs List](#apis-list)
+    - [Routing](#routing)
+        - [Custom Routing](#custom-routing)
+        - [Custom Controller](#custom-controller)
+    - [Additional Configuration](#additional-configuration)
+
+## Installation
+
+### Composer
+
+To include the package in your project, you must modify your `composer.json` file and run `composer update`.
+
+```
+"require": {
+    "codersvn/usermanagement": "^1.0"
+}
+```
+Once the package is installed, the next step is dependant on which framework you are using.
+
+### Service provider
+
+#### Laravel
+
+In your `config/app.php` add the following Service Providers to the end of the `providers` array:
+
+```php
+'providers' => [
+    ...
+    Dingo\Api\Provider\LaravelServiceProvider::class,
+    Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
+    Prettus\Repository\Providers\RepositoryServiceProvider::class,
+    VCComponent\Laravel\User\Providers\UserComponentProvider::class,
+    VCComponent\Laravel\User\Providers\UserComponentRouteProvider::class,
+],
+```
+
+#### Lumen
+
+In your `bootstrap/app.php` add the following Service Providers.
+
+```php
+$app->register(App\Providers\AuthServiceProvider::class);
+$app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+$app->register(Dingo\Api\Provider\LumenServiceProvider::class);
+$app->register(Prettus\Repository\Providers\LumenRepositoryServiceProvider::class);
+$app->register(VCComponent\Laravel\User\Providers\LumenUserComponentProvider::class);
+```
+
+You also need to define `route` in `bootstrapp/app.php`.
+```php
+$app->router->group([
+], function ($router) {
+    require __DIR__ . '/vendor/codersvn/usermanagement/src/routes.php';
+});
+```
+
+### Config and Migration
+
+#### Laravel
+
+Run the following commands to publish configuration and migration files.
+
+```
+php artisan vendor:publish --provider="VCComponent\Laravel\User\Providers\UserComponentProvider"
+php artisan vendor:publish --provider="Dingo\Api\Provider\LaravelServiceProvider"
+php artisan vendor:publish --provider="Tymon\JWTAuth\Providers\LaravelServiceProvider"
+php artisan vendor:publish --provider "Prettus\Repository\Providers\RepositoryServiceProvider"
+```
+
+Create tables.
+
+```
+php artisan migrate
+```
+
+Make a change in `config/auth.php`.
+
+```php
+'providers' => [
+    'users' => [
+        'driver' => 'eloquent',
+        'model'  => VCComponent\Laravel\User\Entities\User::class,
+    ],
+],
+```
+
+#### Lumen
+
+Create `config/auth.php` file and add the following contents.
+
+```php
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Defaults
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default authentication "guard" and password
+    | reset options for your application. You may change these defaults
+    | as required, but they're a perfect start for most applications.
+    |
+    */
+
+    'defaults' => [
+        'guard' => env('AUTH_GUARD', 'api'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Guards
+    |--------------------------------------------------------------------------
+    |
+    | Next, you may define every authentication guard for your application.
+    | Of course, a great default configuration has been defined for you
+    | here which uses session storage and the Eloquent user provider.
+    |
+    | All authentication drivers have a user provider. This defines how the
+    | users are actually retrieved out of your database or other storage
+    | mechanisms used by this application to persist your user's data.
+    |
+    | Supported: "session", "token"
+    |
+    */
+
+    'guards' => [
+        'api' => [
+            'driver' => 'jwt',
+            'provider' => 'users'
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | User Providers
+    |--------------------------------------------------------------------------
+    |
+    | All authentication drivers have a user provider. This defines how the
+    | users are actually retrieved out of your database or other storage
+    | mechanisms used by this application to persist your user's data.
+    |
+    | If you have multiple user tables or models you may configure multiple
+    | sources which represent each model / table. These sources may then
+    | be assigned to any extra authentication guards you have defined.
+    |
+    | Supported: "database", "eloquent"
+    |
+    */
+
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model'  => VCComponent\Laravel\User\Entities\User::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resetting Passwords
+    |--------------------------------------------------------------------------
+    |
+    | Here you may set the options for resetting passwords including the view
+    | that is your password reset e-mail. You may also set the name of the
+    | table that maintains all of the reset tokens for your application.
+    |
+    | You may specify multiple password reset configurations if you have more
+    | than one user table or model in the application and you want to have
+    | separate password reset settings based on the specific user types.
+    |
+    | The expire time is the number of minutes that the reset token should be
+    | considered valid. This security feature keeps tokens short-lived so
+    | they have less time to be guessed. You may change this as needed.
+    |
+    */
+
+    'passwords' => [
+        //
+    ],
+
+];
+```
+
+Create the following migration files.
+
+```
+php artisan make:migration create_users_table
+php artisan make:migration create_statuses_table
+php artisan make:migration create_user_meta_table
+```
+
+Add these following contents to those corresponding migration files
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateUsersTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('email', 40);
+            $table->string('username', 100);
+            $table->string('first_name', 100);
+            $table->string('last_name', 100);
+            $table->string('password', 100);
+            $table->dateTime('last_login');
+            $table->integer('status');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('users');
+    }
+}
+
+```
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateStatusesTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('statuses', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name', 20);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('statuses');
+    }
+}
+
+```
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreateUserMetaTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('user_meta', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('user_id')->unsigned();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('key');
+            $table->text('value');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('user_meta');
+    }
+}
+```
+
+Create tables.
+
+```
+php artisan migrate
+```
+
+### Environment
+
+In `.env` file, we need some configuration.
+
+```
+API_PREFIX=api
+API_VERSION=v1
+API_NAME="Your API Name"
+API_DEBUG=false
+```
+
+Generate `JWT_SECRET` in `.env`file.
+
+```
+php artisan jwt:secret
+```
+
+Now the package is ready to use.
+
+## Configuration
+
+### URL Namespace
+
+To avoid duplication with your application's api endpoints, the package has a default namespace for its routes which is `user-component`. For example:
+
+```
+{{url}}/api/user-component/admin/users
+```
+
+You can modify the package url namespace to whatever you want by modifying the `USER_MANAGEMENT_NAMESAPCE` variable in `.env` file.
+
+```
+USER_MANAGEMENT_NAMESPACE="your-namespace"
+```
+
+### User Model
+
+You can use your own `User` model by modifying `config/auth.php`
+
+```php
+'providers' => [
+    'users' => [
+        'driver' => 'eloquent',
+        'model'  => App\Entities\User::class,
+    ],
+],
+```
+
+Your `User` model must has the following content.
+
+```php
+<?php
+
+namespace App\Entities;
+
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Hash;
+use VCComponent\Laravel\User\Contracts\UserManagement;
+use VCComponent\Laravel\User\Contracts\UserSchema;
+use VCComponent\Laravel\User\Traits\UserManagementTrait;
+use VCComponent\Laravel\User\Traits\UserSchemaTrait;
+use Prettus\Repository\Contracts\Transformable;
+use Prettus\Repository\Traits\TransformableTrait;
+use Tymon\JWTAuth\Contracts\JWTSubject;
+
+class User extends Model implements AuthenticatableContract, JWTSubject, Transformable, UserManagement, UserSchema
+{
+    use Authenticatable, TransformableTrait, UserManagementTrait, UserSchemaTrait;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'email',
+        'username',
+        'first_name',
+        'last_name',
+    ];
+
+    /**
+     * The attributes excluded from the model's JSON form.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'password',
+    ];
+
+    /**
+     * Get the identifier that will be stored in the subject claim of the JWT.
+     *
+     * @return mixed
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Return a key value array, containing any custom claims to be added to the JWT.
+     *
+     * @return array
+     */
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = Hash::make($value);
+    }
+}
+```
+
+### User Transformer
+
+#### Laravel
+
+You can use your own `UserTransformer` class by modifying `config/user.php`.
+
+```php
+'transformers' => [
+    'user'   => App\Transformers\UserTransformer::class,
+],
+```
+
+#### Lumen
+
+Create `config/user.php` with the following content.
+
+```php
+<?php
+
+return [
+
+    'namespace'    => env('USER_MANAGEMENT_NAMESPACE', 'user-component'),
+
+    'transformers' => [
+        'user'   => VCComponent\Laravel\User\Transformers\UserTransformer::class,
+    ],
+
+];
+```
+
+Now you can modify `UserTransformer` class.
+
+## User Model
+
+### User Schema
+
+By default, the package provides some very basic fields in `users` table. In your application, you may want to have your own fields in `users` table to meet your application's requirements. It can be solved thanks to the *User Meta* system within the package which holds any additional fields datas you include.
+
+The package provides a way to describe your additional fields throught `schema()` method. In `schema()`, you'll need to define your field `name`, field `type` and field validation `rule`.
+
+All you need to do is declaring `schema()` method in your `User` model.
+
+```php
+public static function schema()
+{
+		return [
+				'address' => [
+						'type' => 'string',
+						'rule' => ['required']
+				],
+				'phone_number' => [
+						'type' => 'string',
+						'rule' => ['required', 'regex:/^\d+$/', 'min:9', 'max:15']
+				],
+		];
+}
+```
+
+### User Management
+
+In your application, you may want to determine if the user has grant to access user resources. The package provides `UserManagementTrait` which contains the logic for grant access determination. The `UserMangementTrait` contains 4 methods: `ableToShow()`, `ableToCreate()`, `ableToUpdate()`, `ableToDelete()`. These methods will execute the checking logic and then return boolean value.
+
+To overwrite the default logic with your own, all you need to do is declaring these methods within your `User` model.
+
+```php
+public function ableToUpdate($id)
+{
+		if ($this->id === $id || $this->isRole('admin')) {
+				return true;
+		}
+		return false;
+}
+```
+
+> Take a look at `VCComponent\Laravel\User\Traits\UserManagementTrait` for more details of these methods.
+
+## APIs List
+
+Here is the list of APIs provided by the package.
+
+| Verb   | URI                                        | Action             |
+| ------ | ------------------------------------------ | ------------------ |
+| POST   | `/api/{namespace}/register`                | register           |
+| POST   | `/api/{namespace}/login`                   | login              |
+| GET    | `/api/{namespace}/me`                      | get profile        |
+| ------ | ------                                     | ------             |
+| GET    | `/api/{namespace}/admin/users`             | index              |
+| GET    | `/api/{namespace}/admin/users/all`         | list all           |
+| POST   | `/api/{namespace}/admin/users`             | store              |
+| GET    | `/api/{namespace}/admin/users/{id}`        | show               |
+| PUT    | `/api/{namespace}/admin/users/{id}`        | update             |
+| DELETE | `/api/{namespace}/admin/users/{id}`        | destroy            |
+| PUT    | `/api/{namespace}/admin/users/status/bulk` | bulk update status |
+| PUT    | `/api/{namespace}/admin/users/status/{id}` | update item status |
+| ------ | ------                                     | ------             |
+| GET    | `/api/{namespace}/users`                   | index              |
+| GET    | `/api/{namespace}/users/all`               | list all           |
+| GET    | `/api/{namespace}/users/{id}`              | show               |
+| PUT    | `/api/{namespace}/users/{id}`              | update             |
+
+## Routing
+
+### Custom Routing
+
+To use your own routes, you need to **remove** `VCComponent\Laravel\User\Providers\UserComponentRouteProvider` within `config/app.php`.
+
+Now you can manually create and use your own routes.
+
+### Custom Controller
+
+You are free to use your own `UserController` to customize the API functionality.
+
+To make sure that your changes won't crash the other functionality, your `UserController` need to extend `VCComponent\Laravel\User\Http\Controller\ApiController` and use `UserAdminMethods` trait for admin controller, `UserFrontendMethods` trait for frontend controller.
+
+## Additional Configuration
+
+The package contains 3 other packages which are `dingo/api`, `tymon/jwt-auth`, `prettus/l5-repository`.
+
+Other configurations of these packages, please follow their documentation.

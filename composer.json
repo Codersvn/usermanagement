@@ -1,0 +1,22 @@
+{
+    "name": "codersvn/usermanagement",
+    "description": "User component for Laravel / Lumen",
+    "authors": [{
+        "name": "Hieupv",
+        "email": "hieupv@codersvn.com"
+    }, {
+        "name": "Haisc",
+        "email": "sonhaichu@gmail.com"
+    }],
+    "autoload": {
+        "classmap": [],
+        "psr-4": {
+            "VCComponent\\Laravel\\User\\": "src/app/"
+        }
+    },
+    "require": {
+        "dingo/api": "2.0.0-alpha1",
+        "prettus/l5-repository": "^2.6",
+        "tymon/jwt-auth": "^1.0@dev"
+    }
+}
