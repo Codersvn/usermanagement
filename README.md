@@ -55,6 +55,7 @@ In your `config/app.php` add the following Service Providers to the end of the `
     Prettus\Repository\Providers\RepositoryServiceProvider::class,
     VCComponent\Laravel\User\Providers\UserComponentProvider::class,
     VCComponent\Laravel\User\Providers\UserComponentRouteProvider::class,
+    VCComponent\Laravel\User\Providers\UserComponentEventProvider::class,
 ],
 ```
 
@@ -209,12 +210,49 @@ return [
 Create the following migration files.
 
 ```
+php artisan make:migration create_password_resets_table
 php artisan make:migration create_users_table
 php artisan make:migration create_statuses_table
 php artisan make:migration create_user_meta_table
 ```
 
 Add these following contents to those corresponding migration files
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreatePasswordResetsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('password_resets', function (Blueprint $table) {
+            $table->string('email')->index();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('password_resets');
+    }
+}
+
+```
 
 ```php
 <?php
@@ -240,8 +278,11 @@ class CreateUsersTable extends Migration
             $table->string('last_name', 100);
             $table->string('password', 100);
             $table->dateTime('last_login');
+            $table->boolean('email_verified')->default(0);
             $table->integer('status');
+            $table->rememberToken();
             $table->timestamps();
+
         });
     }
 
@@ -391,23 +432,33 @@ Your `User` model must has the following content.
 ```php
 <?php
 
-namespace App\Entities;
+namespace VCComponent\Laravel\User\Entities;
 
 use Illuminate\Auth\Authenticatable;
+use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Model;
+// use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use VCComponent\Laravel\User\Contracts\UserManagement;
 use VCComponent\Laravel\User\Contracts\UserSchema;
+use VCComponent\Laravel\User\Notifications\MailResetPasswordToken;
 use VCComponent\Laravel\User\Traits\UserManagementTrait;
 use VCComponent\Laravel\User\Traits\UserSchemaTrait;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
-class User extends Model implements AuthenticatableContract, JWTSubject, Transformable, UserManagement, UserSchema
+class User extends Model implements AuthenticatableContract, JWTSubject, Transformable, UserManagement, UserSchema, CanResetPasswordContract
 {
-    use Authenticatable, TransformableTrait, UserManagementTrait, UserSchemaTrait;
+    use Authenticatable,
+        TransformableTrait,
+        UserManagementTrait,
+        UserSchemaTrait,
+        // Notifiable,
+        CanResetPassword;
 
     /**
      * The attributes that are mass assignable.
@@ -454,7 +505,23 @@ class User extends Model implements AuthenticatableContract, JWTSubject, Transfo
     {
         $this->attributes['password'] = Hash::make($value);
     }
+
+    public function getEmailVerifyToken()
+    {
+        return Hash::make($this->email);
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        // $this->notify(new MailResetPasswordToken($token));
+    }
+
+    public function getToken()
+    {
+        return JWTAuth::fromUser($this);
+    }
 }
+
 ```
 
 ### User Transformer
@@ -537,25 +604,30 @@ public function ableToUpdate($id)
 
 Here is the list of APIs provided by the package.
 
-| Verb   | URI                                        | Action             |
-| ------ | ------------------------------------------ | ------------------ |
-| POST   | `/api/{namespace}/register`                | register           |
-| POST   | `/api/{namespace}/login`                   | login              |
-| GET    | `/api/{namespace}/me`                      | get profile        |
-| ------ | ------                                     | ------             |
-| GET    | `/api/{namespace}/admin/users`             | index              |
-| GET    | `/api/{namespace}/admin/users/all`         | list all           |
-| POST   | `/api/{namespace}/admin/users`             | store              |
-| GET    | `/api/{namespace}/admin/users/{id}`        | show               |
-| PUT    | `/api/{namespace}/admin/users/{id}`        | update             |
-| DELETE | `/api/{namespace}/admin/users/{id}`        | destroy            |
-| PUT    | `/api/{namespace}/admin/users/status/bulk` | bulk update status |
-| PUT    | `/api/{namespace}/admin/users/status/{id}` | update item status |
-| ------ | ------                                     | ------             |
-| GET    | `/api/{namespace}/users`                   | index              |
-| GET    | `/api/{namespace}/users/all`               | list all           |
-| GET    | `/api/{namespace}/users/{id}`              | show               |
-| PUT    | `/api/{namespace}/users/{id}`              | update             |
+| Verb   | URI                                               | Action             |
+|--------|---------------------------------------------------|--------------------|
+| POST   | `/api/{namespace}/register`                       | register           |
+| POST   | `/api/{namespace}/login`                          | login              |
+| GET    | `/api/{namespace}/me`                             | get profile        |
+| POST   | `/api/{namespace}/password/email`                 | forgot password    |
+| PUT    | `/api/{namespace}/password/reset`                 | reset password     |
+| ------ | ------                                            | ------             |
+| GET    | `/api/{namespace}/admin/users`                    | index              |
+| GET    | `/api/{namespace}/admin/users/all`                | list all           |
+| POST   | `/api/{namespace}/admin/users`                    | store              |
+| GET    | `/api/{namespace}/admin/users/{id}`               | show               |
+| PUT    | `/api/{namespace}/admin/users/{id}`               | update             |
+| DELETE | `/api/{namespace}/admin/users/{id}`               | destroy            |
+| PUT    | `/api/{namespace}/admin/users/status/bulk`        | bulk update status |
+| PUT    | `/api/{namespace}/admin/users/status/{id}`        | update item status |
+| ------ | ------                                            | ------             |
+| GET    | `/api/{namespace}/users`                          | index              |
+| GET    | `/api/{namespace}/users/all`                      | list all           |
+| GET    | `/api/{namespace}/users/{id}`                     | show               |
+| PUT    | `/api/{namespace}/users/{id}`                     | update             |
+| PUT    | `/api/{namespace/users/{id}/verify-email`         | verify email       |
+| GET    | `/api/{namespace/users/{id}/is-verified-email`    | is verified email  |
+| POST   | `/api/{namespace}/users/{id}/resend-verify-email` | resend verify      |
 
 ## Routing
 

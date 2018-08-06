@@ -5,11 +5,12 @@ namespace VCComponent\Laravel\User\Traits;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use VCComponent\Laravel\User\Entities\UserMeta;
 use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
+use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 trait UserMethodsAdmin
 {
@@ -175,6 +176,8 @@ trait UserMethodsAdmin
                 UserMeta::where([['user_id', $user->id], ['key', $key]])->update(['value' => $value]);
             }
         }
+
+        Event::fire(new UserUpdatedByAdminEvent($user));
 
         return $this->response->item($user, new $this->transformer);
     }

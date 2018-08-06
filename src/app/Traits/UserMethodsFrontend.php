@@ -6,14 +6,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
-use VCComponent\Laravel\User\Entities\UserMeta;
-use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
-use VCComponent\Laravel\User\Events\UserRegisteredEvent;
-use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
-use VCComponent\Laravel\User\Notifications\UserRegisteredNotification;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use VCComponent\Laravel\User\Entities\UserMeta;
+use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
+use VCComponent\Laravel\User\Events\UserRegisteredEvent;
+use VCComponent\Laravel\User\Events\UserUpdatedEvent;
+use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
+use VCComponent\Laravel\User\Notifications\UserRegisteredNotification;
 
 trait UserMethodsFrontend
 {
@@ -163,6 +164,8 @@ trait UserMethodsFrontend
                 UserMeta::where([['user_id', $user->id], ['key', $key]])->update(['value' => $value]);
             }
         }
+
+        Event::fire(new UserUpdatedEvent($user));
 
         return $this->response->item($user, new $this->transformer);
     }

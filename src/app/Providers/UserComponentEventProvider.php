@@ -14,6 +14,10 @@ use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
 // use VCComponent\Laravel\User\Listeners\UserCreatedByAdminListener;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
 // use VCComponent\Laravel\User\Listeners\UserDeletedListener;
+use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
+// use VCComponent\Laravel\User\Listeners\UserUpdatedByAdminListener;
+use VCComponent\Laravel\User\Events\UserUpdatedEvent;
+// use VCComponent\Laravel\User\Listeners\UserUpdatedListener;
 
 class UserComponentEventProvider extends ServiceProvider
 {
@@ -37,6 +41,12 @@ class UserComponentEventProvider extends ServiceProvider
         ],
         UserDeletedEvent::class => [
             // UserDeletedListener::class,
+        ],
+        UserUpdatedByAdminEvent::class => [
+            // UserUpdatedByAdminListener::class,
+        ],
+        UserUpdatedEvent::class => [
+            // UserUpdatedListener::class,
         ],
     ];
 
