@@ -8,7 +8,9 @@ interface UserManagement
 
 		public function ableToCreate();
 
-    public function ableToUpdate($id);
+    public function ableToUpdate();
+
+    public function ableToUpdateProfile($id);
     
     public function ableToDelete($id);
 }

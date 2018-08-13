@@ -149,7 +149,7 @@ trait UserMethodsAdmin
     public function update(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
-        if (!$user->ableToUpdate($id)) {
+        if (!$user->ableToUpdateProfile($id)) {
             throw new PermissionDeniedException();
         }
 
@@ -205,7 +205,7 @@ trait UserMethodsAdmin
     public function bulkUpdateStatus(Request $request)
     {
         $user = $this->getAuthenticatedUser();
-        if (!$user->ableToUpdate($user->id)) {
+        if (!$user->ableToUpdate()) {
             throw new PermissionDeniedException();
         }
 
@@ -222,7 +222,7 @@ trait UserMethodsAdmin
     public function status($id, Request $request)
     {
         $user = $this->getAuthenticatedUser();
-        if (!$user->ableToUpdate($user->id)) {
+        if (!$user->ableToUpdate()) {
             throw new PermissionDeniedException();
         }
 

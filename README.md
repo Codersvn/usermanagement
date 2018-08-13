@@ -4,31 +4,29 @@ The User Component package provides a convenient way of managing application's u
 
 ## Table of content
 
-- [User Component for Laravel and Lumen](#user-component-for-laravel-and-lumen)
-    - [Table of content](#table-of-content)
-    - [Installation](#installation)
-        - [Composer](#composer)
-        - [Service provider](#service-provider)
-            - [Laravel](#laravel)
-            - [Lumen](#lumen)
-        - [Config and Migration](#config-and-migration)
-            - [Laravel](#laravel)
-            - [Lumen](#lumen)
-        - [Environment](#environment)
-    - [Configuration](#configuration)
-        - [URL Namespace](#url-namespace)
-        - [User Model](#user-model)
-        - [User Transformer](#user-transformer)
-            - [Laravel](#laravel)
-            - [Lumen](#lumen)
+- [Installation](#installation)
+    - [Composer](#composer)
+    - [Service provider](#service-provider)
+        - [Laravel](#laravel)
+        - [Lumen](#lumen)
+    - [Config and Migration](#config-and-migration)
+        - [Laravel](#laravel)
+        - [Lumen](#lumen)
+    - [Environment](#environment)
+- [Configuration](#configuration)
+    - [URL Namespace](#url-namespace)
     - [User Model](#user-model)
-        - [User Schema](#user-schema)
-        - [User Management](#user-management)
-    - [APIs List](#apis-list)
-    - [Routing](#routing)
-        - [Custom Routing](#custom-routing)
-        - [Custom Controller](#custom-controller)
-    - [Additional Configuration](#additional-configuration)
+    - [User Transformer](#user-transformer)
+        - [Laravel](#laravel)
+        - [Lumen](#lumen)
+- [User Model](#user-model)
+    - [User Schema](#user-schema)
+    - [User Management](#user-management)
+- [APIs List](#apis-list)
+- [Routing](#routing)
+    - [Custom Routing](#custom-routing)
+    - [Custom Controller](#custom-controller)
+- [Additional Configuration](#additional-configuration)
 
 ## Installation
 
@@ -97,6 +95,8 @@ Create tables.
 ```
 php artisan migrate
 ```
+
+> Please delete the Laravel default `users` migration file to avoid conflict when running the migrate command.
 
 Make a change in `config/auth.php`.
 
@@ -201,7 +201,11 @@ return [
     */
 
     'passwords' => [
-        //
+        'users' => [
+            'provider' => 'users',
+            'table' => 'password_resets',
+            'expire' => 60,
+        ],
     ],
 
 ];
@@ -402,13 +406,13 @@ Now the package is ready to use.
 
 ### URL Namespace
 
-To avoid duplication with your application's api endpoints, the package has a default namespace for its routes which is `user-component`. For example:
+To avoid duplication with your application's api endpoints, the package has a default namespace for its routes which is `user-management`. For example:
 
 ```
-{{url}}/api/user-component/admin/users
+{{url}}/api/user-management/admin/users
 ```
 
-You can modify the package url namespace to whatever you want by modifying the `USER_MANAGEMENT_NAMESAPCE` variable in `.env` file.
+You can modify the package url namespace to whatever you want by modifying the `USER_MANAGEMENT_NAMESPACE` variable in `.env` file.
 
 ```
 USER_MANAGEMENT_NAMESPACE="your-namespace"
@@ -432,7 +436,7 @@ Your `User` model must has the following content.
 ```php
 <?php
 
-namespace VCComponent\Laravel\User\Entities;
+namespace App\Entities;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -521,7 +525,6 @@ class User extends Model implements AuthenticatableContract, JWTSubject, Transfo
         return JWTAuth::fromUser($this);
     }
 }
-
 ```
 
 ### User Transformer
@@ -545,7 +548,7 @@ Create `config/user.php` with the following content.
 
 return [
 
-    'namespace'    => env('USER_MANAGEMENT_NAMESPACE', 'user-component'),
+    'namespace'    => env('USER_MANAGEMENT_NAMESPACE', 'user-management'),
 
     'transformers' => [
         'user'   => VCComponent\Laravel\User\Transformers\UserTransformer::class,
@@ -569,32 +572,32 @@ All you need to do is declaring `schema()` method in your `User` model.
 ```php
 public static function schema()
 {
-		return [
-				'address' => [
-						'type' => 'string',
-						'rule' => ['required']
-				],
-				'phone_number' => [
-						'type' => 'string',
-						'rule' => ['required', 'regex:/^\d+$/', 'min:9', 'max:15']
-				],
-		];
+    return [
+        'address' => [
+            'type' => 'string',
+            'rule' => ['required']
+        ],
+        'phone_number' => [
+            'type' => 'string',
+            'rule' => ['required', 'regex:/^\d+$/', 'min:9', 'max:15']
+        ],
+    ];
 }
 ```
 
 ### User Management
 
-In your application, you may want to determine if the user has grant to access user resources. The package provides `UserManagementTrait` which contains the logic for grant access determination. The `UserMangementTrait` contains 4 methods: `ableToShow()`, `ableToCreate()`, `ableToUpdate()`, `ableToDelete()`. These methods will execute the checking logic and then return boolean value.
+In your application, you may want to determine if the user is granted to access user resources. The package provides `UserManagementTrait` which contains the logic for granting access. The `UserMangementTrait` contains 5 methods: `ableToShow()`, `ableToCreate()`, `ableToUpdate()`, `ableToUpdateProfile()`, `ableToDelete()`. These methods will execute the checking logic and then return boolean value.
 
 To overwrite the default logic with your own, all you need to do is declaring these methods within your `User` model.
 
 ```php
-public function ableToUpdate($id)
+public function ableToUpdateProfile($id)
 {
-		if ($this->id === $id || $this->isRole('admin')) {
-				return true;
-		}
-		return false;
+    if ($this->id == $id || $this->isRole('admin')) {
+        return true;
+    }
+    return false;
 }
 ```
 
@@ -604,30 +607,30 @@ public function ableToUpdate($id)
 
 Here is the list of APIs provided by the package.
 
-| Verb   | URI                                               | Action             |
-|--------|---------------------------------------------------|--------------------|
-| POST   | `/api/{namespace}/register`                       | register           |
-| POST   | `/api/{namespace}/login`                          | login              |
-| GET    | `/api/{namespace}/me`                             | get profile        |
-| POST   | `/api/{namespace}/password/email`                 | forgot password    |
-| PUT    | `/api/{namespace}/password/reset`                 | reset password     |
-| ------ | ------                                            | ------             |
-| GET    | `/api/{namespace}/admin/users`                    | index              |
-| GET    | `/api/{namespace}/admin/users/all`                | list all           |
-| POST   | `/api/{namespace}/admin/users`                    | store              |
-| GET    | `/api/{namespace}/admin/users/{id}`               | show               |
-| PUT    | `/api/{namespace}/admin/users/{id}`               | update             |
-| DELETE | `/api/{namespace}/admin/users/{id}`               | destroy            |
-| PUT    | `/api/{namespace}/admin/users/status/bulk`        | bulk update status |
-| PUT    | `/api/{namespace}/admin/users/status/{id}`        | update item status |
-| ------ | ------                                            | ------             |
-| GET    | `/api/{namespace}/users`                          | index              |
-| GET    | `/api/{namespace}/users/all`                      | list all           |
-| GET    | `/api/{namespace}/users/{id}`                     | show               |
-| PUT    | `/api/{namespace}/users/{id}`                     | update             |
-| PUT    | `/api/{namespace/users/{id}/verify-email`         | verify email       |
-| GET    | `/api/{namespace/users/{id}/is-verified-email`    | is verified email  |
-| POST   | `/api/{namespace}/users/{id}/resend-verify-email` | resend verify      |
+| Verb   | URI                                               | Action              |
+|--------|---------------------------------------------------|---------------------|
+| POST   | `/api/{namespace}/register`                       | register            |
+| POST   | `/api/{namespace}/login`                          | login               |
+| GET    | `/api/{namespace}/me`                             | get profile         |
+| POST   | `/api/{namespace}/password/email`                 | forgot password     |
+| PUT    | `/api/{namespace}/password/reset`                 | reset password      |
+| ------ | ------                                            | ------              |
+| GET    | `/api/{namespace}/admin/users`                    | index               |
+| GET    | `/api/{namespace}/admin/users/all`                | list all            |
+| POST   | `/api/{namespace}/admin/users`                    | store               |
+| GET    | `/api/{namespace}/admin/users/{id}`               | show                |
+| PUT    | `/api/{namespace}/admin/users/{id}`               | update              |
+| DELETE | `/api/{namespace}/admin/users/{id}`               | destroy             |
+| PUT    | `/api/{namespace}/admin/users/status/bulk`        | bulk update status  |
+| PUT    | `/api/{namespace}/admin/users/status/{id}`        | update item status  |
+| ------ | ------                                            | ------              |
+| GET    | `/api/{namespace}/users`                          | index               |
+| GET    | `/api/{namespace}/users/all`                      | list all            |
+| GET    | `/api/{namespace}/users/{id}`                     | show                |
+| PUT    | `/api/{namespace}/users/{id}`                     | update              |
+| PUT    | `/api/{namespace}/users/{id}/verify-email`        | verify email        |
+| GET    | `/api/{namespace}/users/{id}/is-verified-email`   | is verified email   |
+| POST   | `/api/{namespace}/users/{id}/resend-verify-email` | resend verify email |
 
 ## Routing
 

@@ -147,7 +147,7 @@ trait UserMethodsFrontend
     public function update(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
-        if (!$user->ableToUpdate($id)) {
+        if (!$user->ableToUpdateProfile($id)) {
             throw new PermissionDeniedException();
         }
 
