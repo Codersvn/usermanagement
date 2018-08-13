@@ -14,7 +14,12 @@ trait UserManagementTrait
         return true;
     }
 
-    public function ableToUpdate($id)
+    public function ableToUpdate()
+    {
+        return true;
+    }
+
+    public function ableToUpdateProfile($id)
     {
         return true;
     }

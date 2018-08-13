@@ -112,14 +112,10 @@ class ApiController extends Controller
 
         $data            = [];
         $data['default'] = $request_data->filter(function ($value, $key) use ($default_keys) {
-            if (in_array($key, $default_keys)) {
-                return $value;
-            }
+            return in_array($key, $default_keys);
         })->toArray();
         $data['schema'] = $request_data->filter(function ($value, $key) use ($schema_keys) {
-            if (in_array($key, $schema_keys)) {
-                return $value;
-            }
+            return in_array($key, $schema_keys);
         })->toArray();
 
         return $data;
