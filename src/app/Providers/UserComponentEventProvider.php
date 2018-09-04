@@ -2,22 +2,16 @@
 
 namespace VCComponent\Laravel\User\Providers;
 
-use Illuminate\Support\Facades\Event;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use VCComponent\Laravel\User\Events\UserRegisteredEvent;
-// use VCComponent\Laravel\User\Listeners\UserRegisteredListener;
-use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
-// use VCComponent\Laravel\User\Listeners\UserEmailVerifiedListener;
-use VCComponent\Laravel\User\Events\UserLoggedInEvent;
-// use VCComponent\Laravel\User\Listeners\UserLoggedInListener;
+use Illuminate\Support\Facades\Event;
 use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
-// use VCComponent\Laravel\User\Listeners\UserCreatedByAdminListener;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
-// use VCComponent\Laravel\User\Listeners\UserDeletedListener;
+use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
+use VCComponent\Laravel\User\Events\UserLoggedInEvent;
+use VCComponent\Laravel\User\Events\UserRegisteredBySocialAccountEvent;
+use VCComponent\Laravel\User\Events\UserRegisteredEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
-// use VCComponent\Laravel\User\Listeners\UserUpdatedByAdminListener;
 use VCComponent\Laravel\User\Events\UserUpdatedEvent;
-// use VCComponent\Laravel\User\Listeners\UserUpdatedListener;
 
 class UserComponentEventProvider extends ServiceProvider
 {
@@ -47,6 +41,9 @@ class UserComponentEventProvider extends ServiceProvider
         ],
         UserUpdatedEvent::class => [
             // UserUpdatedListener::class,
+        ],
+        UserRegisteredBySocialAccountEvent::class => [
+            // UserRegisteredBySocialAccountListener::class,
         ],
     ];
 

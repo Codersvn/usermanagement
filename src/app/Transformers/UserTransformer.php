@@ -15,6 +15,7 @@ class UserTransformer extends TransformerAbstract
             'first_name' => $model->first_name,
             'last_name'  => $model->last_name,
             'last_login' => $model->last_login,
+            'avatar'     => $model->avatar ? $model->avatar : '',
             'status'     => (int) $model->status,
         ];
 

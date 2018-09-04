@@ -19,6 +19,7 @@ The User Component package provides a convenient way of managing application's u
     - [User Transformer](#user-transformer)
         - [Laravel](#laravel)
         - [Lumen](#lumen)
+    - [Social Login](#social-login)
 - [User Model](#user-model)
     - [User Schema](#user-schema)
     - [User Management](#user-management)
@@ -559,6 +560,24 @@ return [
 
 Now you can modify `UserTransformer` class.
 
+### Social login
+
+To be able to use social login api provided by the package, you have to add these configuartion to `app/services.php`
+
+```php
+'facebook'  => [
+    'client_id'     => env('FACEBOOK_CLIENT_ID'),
+    'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+    'redirect'      => env('FACEBOOK_CALLBACK_URL'),
+],
+
+'google'    => [
+    'client_id'     => env('GOOGLE_CLIENT_ID'),
+    'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    'redirect'      => env('GOOGLE_CALLBACK_URL'),
+],
+```
+
 ## User Model
 
 ### User Schema
@@ -611,6 +630,7 @@ Here is the list of APIs provided by the package.
 |--------|---------------------------------------------------|---------------------|
 | POST   | `/api/{namespace}/register`                       | register            |
 | POST   | `/api/{namespace}/login`                          | login               |
+| POST   | `/api/{namespace}/login/social`                   | social login        |
 | GET    | `/api/{namespace}/me`                             | get profile         |
 | POST   | `/api/{namespace}/password/email`                 | forgot password     |
 | PUT    | `/api/{namespace}/password/reset`                 | reset password      |
