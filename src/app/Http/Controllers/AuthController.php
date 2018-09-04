@@ -2,6 +2,7 @@
 
 namespace VCComponent\Laravel\User\Http\Controllers;
 
+use Illuminate\Support\Facades\App;
 use VCComponent\Laravel\User\Http\Controllers\ApiController;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Traits\Authenticate;
@@ -13,11 +14,13 @@ class AuthController extends ApiController
 
     private $repository;
     private $validator;
+    private $entity;
 
     public function __construct(UserRepository $repository, AuthValidator $validator)
     {
         $this->repository = $repository;
         $this->validator  = $validator;
-        $this->middleware('jwt.auth', ['except' => ['authenticate']]);
+        $this->entity     = App::make($repository->model());
+        $this->middleware('jwt.auth', ['except' => ['authenticate', 'socialLogin', 'saveOrUpdateUser']]);
     }
 }
