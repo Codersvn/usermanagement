@@ -562,7 +562,7 @@ Now you can modify `UserTransformer` class.
 
 ### Social login
 
-To be able to use social login api provided by the package, you have to add these configuartion to `app/services.php`
+To be able to use social login api provided by the package, you have to add these configuartion to `config/services.php`
 
 ```php
 'facebook'  => [
