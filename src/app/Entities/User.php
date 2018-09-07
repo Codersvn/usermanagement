@@ -38,6 +38,7 @@ class User extends Model implements AuthenticatableContract, JWTSubject, Transfo
         'username',
         'first_name',
         'last_name',
+        'avatar',
     ];
 
     /**
