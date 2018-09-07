@@ -24,7 +24,7 @@ class CreateUsersTable extends Migration
             $table->boolean('email_verified')->default(0);
             $table->string('account_type')->default('normal')->comment('normal, facebook, google, ...');
             $table->string('social_id');
-            $table->string('avatar');
+            $table->string('avatar')->nullable();
             $table->integer('status');
             $table->rememberToken();
             $table->timestamps();
