@@ -133,6 +133,7 @@ trait Authenticate
         }
 
         $token = JWTAuth::fromUser($user);
+        Event::fire(new UserLoggedInEvent($user));
         return $this->response->array(compact('token'));
     }
 }
