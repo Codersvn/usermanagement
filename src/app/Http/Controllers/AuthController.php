@@ -15,12 +15,6 @@ class AuthController extends ApiController
     private $repository;
     private $validator;
     private $entity;
-
-    public function __construct(UserRepository $repository, AuthValidator $validator)
-    {
-        $this->repository = $repository;
-        $this->validator  = $validator;
-        $this->entity     = App::make($repository->model());
-        $this->middleware('jwt.auth', ['except' => ['authenticate', 'socialLogin', 'saveOrUpdateUser']]);
-    }
+    private $transformer;
+    private $credential;
 }

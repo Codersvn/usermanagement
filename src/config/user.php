@@ -13,4 +13,9 @@ return [
         'frontend' => VCComponent\Laravel\User\Http\Controllers\Frontend\UserController::class,
     ],
 
+    'auth'         => [
+        'credential' => 'email',
+        'rule'       => ['required', 'email'],
+    ],
+
 ];
