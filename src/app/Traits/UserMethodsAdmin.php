@@ -11,9 +11,25 @@ use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
+use VCComponent\Laravel\User\Repositories\UserRepository;
+use VCComponent\Laravel\User\Transformers\UserTransformer;
+use VCComponent\Laravel\User\Validators\UserValidator;
 
 trait UserMethodsAdmin
 {
+    public function __construct(UserRepository $repository, UserValidator $validator)
+    {
+        $this->repository = $repository;
+        $this->validator  = $validator;
+        $this->middleware('jwt.auth', ['except' => []]);
+
+        if (isset(config('user.transformers')['user'])) {
+            $this->transformer = config('user.transformers.user');
+        } else {
+            $this->transformer = UserTransformer::class;
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -44,8 +60,7 @@ trait UserMethodsAdmin
         return $this->response->paginator($users, $transformer);
     }
 
-    public function list(Request $request)
-    {
+    function list(Request $request) {
         $query = App::make($this->repository->model());
 
         if ($request->has('roles')) {
@@ -121,7 +136,7 @@ trait UserMethodsAdmin
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id, Request $request)
+    public function show(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
         if (!$user->ableToShow($id)) {
@@ -219,7 +234,7 @@ trait UserMethodsAdmin
         return $this->success();
     }
 
-    public function status($id, Request $request)
+    public function status(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
         if (!$user->ableToUpdate()) {

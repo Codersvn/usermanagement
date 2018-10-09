@@ -15,9 +15,33 @@ use VCComponent\Laravel\User\Events\UserRegisteredEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
 use VCComponent\Laravel\User\Notifications\UserRegisteredNotification;
+use VCComponent\Laravel\User\Repositories\UserRepository;
+use VCComponent\Laravel\User\Transformers\UserTransformer;
+use VCComponent\Laravel\User\Validators\UserValidator;
 
 trait UserMethodsFrontend
 {
+    public function __construct(UserRepository $repository, UserValidator $validator)
+    {
+        $this->repository = $repository;
+        $this->validator  = $validator;
+        $this->middleware('jwt.auth', ['except' => [
+            'index',
+            'list',
+            'show',
+            'store',
+            'verifyEmail',
+            'isVerifiedEmail',
+            'resendVerifyEmail',
+        ]]);
+
+        if (isset(config('user.transformers')['user'])) {
+            $this->transformer = config('user.transformers.user');
+        } else {
+            $this->transformer = UserTransformer::class;
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -48,7 +72,7 @@ trait UserMethodsFrontend
         return $this->response->paginator($users, $transformer);
     }
 
-    public function list(Request $request) {
+    function list(Request $request) {
         $query = App::make($this->repository->model());
 
         if ($request->has('roles')) {
@@ -119,7 +143,7 @@ trait UserMethodsFrontend
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id, Request $request)
+    public function show(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
         if (!$user->ableToShow($id)) {
@@ -170,7 +194,7 @@ trait UserMethodsFrontend
         return $this->response->item($user, new $this->transformer);
     }
 
-    public function verifyEmail($id, Request $request)
+    public function verifyEmail(Request $request, $id)
     {
         $this->validator->isValid($request, 'VERIFY_EMAIL');
 
@@ -203,7 +227,7 @@ trait UserMethodsFrontend
         }
 
         $user->notify(new UserRegisteredNotification());
-        
+
         return $this->success();
     }
 }
