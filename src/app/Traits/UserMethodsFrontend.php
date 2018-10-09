@@ -40,6 +40,12 @@ trait UserMethodsFrontend
         } else {
             $this->transformer = UserTransformer::class;
         }
+
+        if (config('user.auth.credential') !== null) {
+            $this->credential = config('user.auth.credential');
+        } else {
+            $this->credential = 'email';
+        }
     }
 
     /**
@@ -102,13 +108,14 @@ trait UserMethodsFrontend
      */
     public function store(Request $request)
     {
-        $data         = $this->filterRequestData($request, $this->repository);
-        $schema_rules = $this->validator->getSchemaRules($this->repository);
+        $data           = $this->filterRequestData($request, $this->repository);
+        $schema_rules   = $this->validator->getSchemaRules($this->repository);
+        $no_rule_fields = $this->validator->getNoRuleFields($this->repository);
 
         $this->validator->isValid($data['default'], 'RULE_CREATE');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
-        if (!$this->repository->findByField('email', $request->get('email'))->isEmpty()) {
-            throw new ConflictHttpException('Email already exist', null, 1001);
+        if (!$this->repository->findByField($this->credential, $request->get($this->credential))->isEmpty()) {
+            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
         }
 
         $user = $this->repository->create($data['default']);
@@ -125,6 +132,15 @@ trait UserMethodsFrontend
                     'key'   => $key,
                     'value' => $value,
                 ]);
+            }
+        }
+
+        if (count($no_rule_fields)) {
+            foreach ($no_rule_fields as $key => $value) {
+                $user->userMetas()->updateOrCreate([
+                    'key'   => $key,
+                    'value' => null,
+                ], ['value' => '']);
             }
         }
 
@@ -185,7 +201,7 @@ trait UserMethodsFrontend
 
         if (count($data['schema'])) {
             foreach ($data['schema'] as $key => $value) {
-                UserMeta::where([['user_id', $user->id], ['key', $key]])->update(['value' => $value]);
+                $user->userMetas()->updateOrCreate(['key' => $key], ['value' => $value]);
             }
         }
 

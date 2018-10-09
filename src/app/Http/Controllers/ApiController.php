@@ -7,12 +7,16 @@ use Dingo\Api\Routing\Helpers;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\App;
 use League\Fractal\TransformerAbstract;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ApiController extends Controller
 {
     use Helpers;
+
+    protected $upload_directory = 'uploads';
+    
     public function success()
     {
         return $this->response->array(['success' => true]);
@@ -108,7 +112,8 @@ class ApiController extends Controller
         $request_data_keys = $request_data->keys();
         $schema_keys       = $schema->keys()->toArray();
 
-        $default_keys = $request_data_keys->diff($schema_keys)->all();
+        // $default_keys = $request_data_keys->diff($schema_keys)->all();
+        $default_keys = App::make($repository->model())->getFillable();
 
         $data            = [];
         $data['default'] = $request_data->filter(function ($value, $key) use ($default_keys) {

@@ -14,4 +14,5 @@ class UserController extends ApiController implements AdminUserController
     private $repository;
     private $validator;
     private $transformer;
+    private $credential;
 }

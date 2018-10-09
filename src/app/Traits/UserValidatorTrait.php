@@ -21,4 +21,15 @@ trait UserValidatorTrait
         }
         return true;
     }
+
+    public function getNoRuleFields($repository)
+    {
+        $schema = collect($repository->model()::schema());
+
+        $fields = $schema->filter(function ($item) {
+            return count($item['rule']) === 0;
+        });
+
+        return $fields->toArray();
+    }
 }
