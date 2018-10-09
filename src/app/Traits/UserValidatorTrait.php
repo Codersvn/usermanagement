@@ -2,6 +2,8 @@
 
 namespace VCComponent\Laravel\User\Traits;
 
+use Illuminate\Support\Facades\Validator;
+
 trait UserValidatorTrait
 {
     public function getSchemaRules($repository)
@@ -17,7 +19,7 @@ trait UserValidatorTrait
     {
         $validator = Validator::make($data, $rules);
         if ($validator->fails()) {
-            throw new Exception($validator->errors(), 1000);
+            throw new \Exception($validator->errors(), 1000);
         }
         return true;
     }

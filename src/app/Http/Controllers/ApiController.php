@@ -16,7 +16,7 @@ class ApiController extends Controller
     use Helpers;
 
     protected $upload_directory = 'uploads';
-    
+
     public function success()
     {
         return $this->response->array(['success' => true]);
@@ -113,7 +113,8 @@ class ApiController extends Controller
         $schema_keys       = $schema->keys()->toArray();
 
         // $default_keys = $request_data_keys->diff($schema_keys)->all();
-        $default_keys = App::make($repository->model())->getFillable();
+        $default_keys   = App::make($repository->model())->getFillable();
+        $default_keys[] = 'password';
 
         $data            = [];
         $data['default'] = $request_data->filter(function ($value, $key) use ($default_keys) {

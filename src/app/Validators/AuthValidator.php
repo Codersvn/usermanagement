@@ -11,7 +11,7 @@ class AuthValidator extends AbstractValidator
 
     protected $rules = [
         'LOGIN'        => [
-            'password' => ['required', 'min:4'],
+            'password' => ['required', 'min:6'],
         ],
         'SOCIAL_LOGIN' => [
             'provider'     => ['required'],
