@@ -6,14 +6,35 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use VCComponent\Laravel\User\Entities\UserMeta;
+use VCComponent\Laravel\User\Contracts\UserValidatorInterface;
 use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
+use VCComponent\Laravel\User\Repositories\UserRepository;
+use VCComponent\Laravel\User\Transformers\UserTransformer;
 
 trait UserMethodsAdmin
 {
+    public function __construct(UserRepository $repository, UserValidatorInterface $validator)
+    {
+        $this->repository = $repository;
+        $this->validator  = $validator;
+        $this->middleware('jwt.auth', ['except' => []]);
+
+        if (isset(config('user.transformers')['user'])) {
+            $this->transformer = config('user.transformers.user');
+        } else {
+            $this->transformer = UserTransformer::class;
+        }
+
+        if (config('user.auth.credential') !== null) {
+            $this->credential = config('user.auth.credential');
+        } else {
+            $this->credential = 'email';
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -44,8 +65,7 @@ trait UserMethodsAdmin
         return $this->response->paginator($users, $transformer);
     }
 
-    public function list(Request $request)
-    {
+    function list(Request $request) {
         $query = App::make($this->repository->model());
 
         if ($request->has('roles')) {
@@ -80,20 +100,17 @@ trait UserMethodsAdmin
             throw new PermissionDeniedException();
         }
 
-        $data         = $this->filterRequestData($request, $this->repository);
-        $schema_rules = $this->validator->getSchemaRules($this->repository);
+        $data           = $this->filterRequestData($request, $this->repository);
+        $schema_rules   = $this->validator->getSchemaRules($this->repository);
+        $no_rule_fields = $this->validator->getNoRuleFields($this->repository);
 
         $this->validator->isValid($data['default'], 'ADMIN_CREATE_USER');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
-        if (!$this->repository->findByField('email', $request->get('email'))->isEmpty()) {
-            throw new ConflictHttpException('Email already exist', null, 1001);
+        if (!$this->repository->findByField($this->credential, $request->get($this->credential))->isEmpty()) {
+            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
         }
 
         $user = $this->repository->create($data['default']);
-
-        if ($request->has('role')) {
-            $user = $this->repository->attachRole($request->get('role'), $user->id);
-        }
 
         $user->password = $data['default']['password'];
         if ($request->has('status')) {
@@ -110,6 +127,15 @@ trait UserMethodsAdmin
             }
         }
 
+        if (count($no_rule_fields)) {
+            foreach ($no_rule_fields as $key => $value) {
+                $user->userMetas()->updateOrCreate([
+                    'key'   => $key,
+                    'value' => null,
+                ], ['value' => '']);
+            }
+        }
+
         Event::fire(new UserCreatedByAdminEvent($user));
 
         return $this->response->item($user, new $this->transformer);
@@ -121,7 +147,7 @@ trait UserMethodsAdmin
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id, Request $request)
+    public function show(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
         if (!$user->ableToShow($id)) {
@@ -159,9 +185,9 @@ trait UserMethodsAdmin
         $this->validator->isValid($data['default'], 'ADMIN_UPDATE_USER');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
 
-        $existsEmail = $this->repository->existsEmail($id, $request->get('email'));
-        if ($existsEmail) {
-            throw new ConflictHttpException("Email has exists", null, 1001);
+        $existsCredential = $this->repository->existsCredential($id, $request->get($this->credential));
+        if ($existsCredential) {
+            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
         }
 
         $user = $this->repository->update($data['default'], $id);
@@ -173,7 +199,7 @@ trait UserMethodsAdmin
 
         if (count($data['schema'])) {
             foreach ($data['schema'] as $key => $value) {
-                UserMeta::where([['user_id', $user->id], ['key', $key]])->update(['value' => $value]);
+                $user->userMetas()->updateOrCreate(['key' => $key], ['value' => $value]);
             }
         }
 
@@ -219,7 +245,7 @@ trait UserMethodsAdmin
         return $this->success();
     }
 
-    public function status($id, Request $request)
+    public function status(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
         if (!$user->ableToUpdate()) {

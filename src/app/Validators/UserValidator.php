@@ -4,10 +4,13 @@ namespace VCComponent\Laravel\User\Validators;
 
 use Exception;
 use Illuminate\Support\Facades\Validator;
+use VCComponent\Laravel\User\Contracts\UserValidatorInterface;
+use VCComponent\Laravel\User\Traits\UserValidatorTrait;
 use VCComponent\Laravel\User\Validators\AbstractValidator;
 
-class UserValidator extends AbstractValidator
+class UserValidator extends AbstractValidator implements UserValidatorInterface
 {
+    use UserValidatorTrait;
 
     protected $rules = [
         'ADMIN_CREATE_USER'  => [
@@ -46,22 +49,4 @@ class UserValidator extends AbstractValidator
             'token' => ['required'],
         ],
     ];
-
-    public function getSchemaRules($repository)
-    {
-        $schema = collect($repository->model()::schema());
-        $rules  = $schema->map(function ($item) {
-            return $item['rule'];
-        });
-        return $rules->toArray();
-    }
-
-    public function isSchemaValid($data, $rules)
-    {
-        $validator = Validator::make($data, $rules);
-        if ($validator->fails()) {
-            throw new Exception($validator->errors(), 1000);
-        }
-        return true;
-    }
 }

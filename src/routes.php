@@ -16,32 +16,32 @@ $api = app('Dingo\Api\Routing\Router');
 $api->version('v1', function ($api) {
     $api->group(['prefix' => config('user.namespace')], function ($api) {
         // Auth
-        $api->post('register', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@store');
-        $api->post('login', 'VCComponent\Laravel\User\Http\Controllers\AuthController@authenticate');
-        $api->post('login/social', 'VCComponent\Laravel\User\Http\Controllers\AuthController@socialLogin');
-        $api->get('me', 'VCComponent\Laravel\User\Http\Controllers\AuthController@me');
+        $api->post('register', 'VCComponent\Laravel\User\Contracts\FrontendUserController@store');
+        $api->post('login', 'VCComponent\Laravel\User\Contracts\Auth@authenticate');
+        $api->post('login/social', 'VCComponent\Laravel\User\Contracts\Auth@socialLogin');
+        $api->get('me', 'VCComponent\Laravel\User\Contracts\Auth@me');
         $api->post('password/email', 'VCComponent\Laravel\User\Http\Controllers\ForgotPasswordController@sendResetLinkEmail');
         $api->put('password/reset', 'VCComponent\Laravel\User\Http\Controllers\ResetPasswordController@reset');
 
         // Users
-        $api->get('users', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@index');
-        $api->get('users/all', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@list');
-        $api->get('users/{id}', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@show');
-        $api->put('users/{id}', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@update');
-        $api->put('users/{id}/verify-email', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@verifyEmail');
-        $api->get('users/{id}/is-verified-email', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@isVerifiedEmail');
-        $api->post('users/{id}/resend-verify-email', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@resendVerifyEmail');
+        $api->get('users', 'VCComponent\Laravel\User\Contracts\FrontendUserController@index');
+        $api->get('users/all', 'VCComponent\Laravel\User\Contracts\FrontendUserController@list');
+        $api->get('users/{id}', 'VCComponent\Laravel\User\Contracts\FrontendUserController@show');
+        $api->put('users/{id}', 'VCComponent\Laravel\User\Contracts\FrontendUserController@update');
+        $api->put('users/{id}/verify-email', 'VCComponent\Laravel\User\Contracts\FrontendUserController@verifyEmail');
+        $api->get('users/{id}/is-verified-email', 'VCComponent\Laravel\User\Contracts\FrontendUserController@isVerifiedEmail');
+        $api->post('users/{id}/resend-verify-email', 'VCComponent\Laravel\User\Contracts\FrontendUserController@resendVerifyEmail');
 
         $api->group(['prefix' => 'admin'], function ($api) {
             // Users
-            $api->get('users', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@index');
-            $api->get('users/all', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@list');
-            $api->post('users', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@store');
-            $api->get('users/{id}', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@show');
-            $api->put('users/{id}', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@update');
-            $api->delete('users/{id}', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@destroy');
-            $api->put('users/status/bulk', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@bulkUpdateStatus');
-            $api->put('users/status/{id}', 'VCComponent\Laravel\User\Http\Controllers\Admin\UserController@status');
+            $api->get('users', 'VCComponent\Laravel\User\Contracts\AdminUserController@index');
+            $api->get('users/all', 'VCComponent\Laravel\User\Contracts\AdminUserController@list');
+            $api->post('users', 'VCComponent\Laravel\User\Contracts\AdminUserController@store');
+            $api->get('users/{id}', 'VCComponent\Laravel\User\Contracts\AdminUserController@show');
+            $api->put('users/{id}', 'VCComponent\Laravel\User\Contracts\AdminUserController@update');
+            $api->delete('users/{id}', 'VCComponent\Laravel\User\Contracts\AdminUserController@destroy');
+            $api->put('users/status/bulk', 'VCComponent\Laravel\User\Contracts\AdminUserController@bulkUpdateStatus');
+            $api->put('users/status/{id}', 'VCComponent\Laravel\User\Contracts\AdminUserController@status');
 
             // Statuses
             $api->get('statuses', 'VCComponent\Laravel\User\Http\Controllers\Admin\StatusController@index');

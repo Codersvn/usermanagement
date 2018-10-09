@@ -9,15 +9,45 @@ use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use VCComponent\Laravel\User\Contracts\UserValidatorInterface;
 use VCComponent\Laravel\User\Entities\UserMeta;
 use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
 use VCComponent\Laravel\User\Events\UserRegisteredEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
 use VCComponent\Laravel\User\Notifications\UserRegisteredNotification;
+use VCComponent\Laravel\User\Repositories\UserRepository;
+use VCComponent\Laravel\User\Transformers\UserTransformer;
 
 trait UserMethodsFrontend
 {
+    public function __construct(UserRepository $repository, UserValidatorInterface $validator)
+    {
+        $this->repository = $repository;
+        $this->validator  = $validator;
+        $this->middleware('jwt.auth', ['except' => [
+            'index',
+            'list',
+            'show',
+            'store',
+            'verifyEmail',
+            'isVerifiedEmail',
+            'resendVerifyEmail',
+        ]]);
+
+        if (isset(config('user.transformers')['user'])) {
+            $this->transformer = config('user.transformers.user');
+        } else {
+            $this->transformer = UserTransformer::class;
+        }
+
+        if (config('user.auth.credential') !== null) {
+            $this->credential = config('user.auth.credential');
+        } else {
+            $this->credential = 'email';
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -48,7 +78,7 @@ trait UserMethodsFrontend
         return $this->response->paginator($users, $transformer);
     }
 
-    public function list(Request $request) {
+    function list(Request $request) {
         $query = App::make($this->repository->model());
 
         if ($request->has('roles')) {
@@ -78,13 +108,14 @@ trait UserMethodsFrontend
      */
     public function store(Request $request)
     {
-        $data         = $this->filterRequestData($request, $this->repository);
-        $schema_rules = $this->validator->getSchemaRules($this->repository);
+        $data           = $this->filterRequestData($request, $this->repository);
+        $schema_rules   = $this->validator->getSchemaRules($this->repository);
+        $no_rule_fields = $this->validator->getNoRuleFields($this->repository);
 
         $this->validator->isValid($data['default'], 'RULE_CREATE');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
-        if (!$this->repository->findByField('email', $request->get('email'))->isEmpty()) {
-            throw new ConflictHttpException('Email already exist', null, 1001);
+        if (!$this->repository->findByField($this->credential, $request->get($this->credential))->isEmpty()) {
+            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
         }
 
         $user = $this->repository->create($data['default']);
@@ -104,6 +135,15 @@ trait UserMethodsFrontend
             }
         }
 
+        if (count($no_rule_fields)) {
+            foreach ($no_rule_fields as $key => $value) {
+                $user->userMetas()->updateOrCreate([
+                    'key'   => $key,
+                    'value' => null,
+                ], ['value' => '']);
+            }
+        }
+
         // $user = $this->repository->attachRole('user', $user->id);
 
         Event::fire(new UserRegisteredEvent($user));
@@ -119,7 +159,7 @@ trait UserMethodsFrontend
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id, Request $request)
+    public function show(Request $request, $id)
     {
         $user = $this->getAuthenticatedUser();
         if (!$user->ableToShow($id)) {
@@ -161,7 +201,7 @@ trait UserMethodsFrontend
 
         if (count($data['schema'])) {
             foreach ($data['schema'] as $key => $value) {
-                UserMeta::where([['user_id', $user->id], ['key', $key]])->update(['value' => $value]);
+                $user->userMetas()->updateOrCreate(['key' => $key], ['value' => $value]);
             }
         }
 
@@ -170,7 +210,7 @@ trait UserMethodsFrontend
         return $this->response->item($user, new $this->transformer);
     }
 
-    public function verifyEmail($id, Request $request)
+    public function verifyEmail(Request $request, $id)
     {
         $this->validator->isValid($request, 'VERIFY_EMAIL');
 
@@ -203,7 +243,7 @@ trait UserMethodsFrontend
         }
 
         $user->notify(new UserRegisteredNotification());
-        
+
         return $this->success();
     }
 }

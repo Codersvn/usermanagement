@@ -4,6 +4,7 @@ namespace VCComponent\Laravel\User\Traits;
 
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
@@ -15,20 +16,42 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use VCComponent\Laravel\User\Events\UserLoggedInEvent;
 use VCComponent\Laravel\User\Events\UserRegisteredBySocialAccountEvent;
 use VCComponent\Laravel\User\Exceptions\NotFoundException;
+use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
+use VCComponent\Laravel\User\Validators\AuthValidator;
 
 trait Authenticate
 {
+    public function __construct(UserRepository $repository, AuthValidator $validator)
+    {
+        $this->repository = $repository;
+        $this->validator  = $validator;
+        $this->entity     = App::make($repository->model());
+        $this->middleware('jwt.auth', ['except' => ['authenticate', 'socialLogin', 'saveOrUpdateUser']]);
+
+        if (isset(config('user.transformers')['user'])) {
+            $this->transformer = config('user.transformers.user');
+        } else {
+            $this->transformer = UserTransformer::class;
+        }
+
+        if (config('user.auth.credential') !== null) {
+            $this->credential = config('user.auth.credential');
+        } else {
+            $this->credential = 'email';
+        }
+    }
+
     public function authenticate(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $credentials = $request->only($this->credential, 'password');
         $this->validator->isValid($credentials, 'LOGIN');
 
         try {
-            $user = $this->repository->findByField('email', $credentials['email'])->first();
+            $user = $this->repository->findByField($this->credential, $credentials[$this->credential])->first();
 
             if (!$user) {
-                throw new NotFoundException('Email');
+                throw new NotFoundException(ucfirst(str_replace('_', ' ', $this->credential)));
             }
 
             if (!Hash::check($credentials['password'], $user->password)) {
@@ -70,9 +93,9 @@ trait Authenticate
         }
 
         if ($request->has('includes')) {
-            $transformer = new UserTransformer(explode(',', $request->get('includes')));
+            $transformer = new $this->transformer(explode(',', $request->get('includes')));
         } else {
-            $transformer = new UserTransformer;
+            $transformer = new $this->transformer;
         }
 
         Cache::flush();

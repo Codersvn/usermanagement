@@ -2,13 +2,13 @@
 
 namespace VCComponent\Laravel\User\Repositories;
 
-use VCComponent\Laravel\User\Entities\User;
-use VCComponent\Laravel\User\Repositories\CanFlushCache;
-use VCComponent\Laravel\User\Repositories\UserRepository;
 use Prettus\Repository\Contracts\CacheableInterface;
 use Prettus\Repository\Criteria\RequestCriteria;
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Traits\CacheableRepository;
+use VCComponent\Laravel\User\Entities\User;
+use VCComponent\Laravel\User\Repositories\CanFlushCache;
+use VCComponent\Laravel\User\Repositories\UserRepository;
 
 /**
  * Class UserRepositoryEloquent.
@@ -18,7 +18,7 @@ use Prettus\Repository\Traits\CacheableRepository;
 class UserRepositoryEloquent extends BaseRepository implements UserRepository, CacheableInterface
 {
     use CacheableRepository, CanFlushCache;
-    
+
     /**
      * Specify Model class name
      *
@@ -41,10 +41,16 @@ class UserRepositoryEloquent extends BaseRepository implements UserRepository, C
         $this->pushCriteria(app(RequestCriteria::class));
     }
 
-    public function existsEmail($id, $email)
+    public function existsCredential($id, $value)
     {
+        if (config('user.auth.credential') !== null) {
+            $credential = config('user.auth.credential');
+        } else {
+            $credential = 'email';
+        }
+
         $user = $this->findWhere([
-            'email' => $email,
+            $credential => $value,
             ['id', '!=', $id],
         ])->first();
         if (!$user) {
