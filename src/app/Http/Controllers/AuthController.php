@@ -2,13 +2,11 @@
 
 namespace VCComponent\Laravel\User\Http\Controllers;
 
-use Illuminate\Support\Facades\App;
+use VCComponent\Laravel\User\Contracts\Auth as UserAuthContract;
 use VCComponent\Laravel\User\Http\Controllers\ApiController;
-use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Traits\Authenticate;
-use VCComponent\Laravel\User\Validators\AuthValidator;
 
-class AuthController extends ApiController
+class AuthController extends ApiController implements UserAuthContract
 {
     use Authenticate;
 

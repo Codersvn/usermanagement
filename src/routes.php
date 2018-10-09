@@ -16,10 +16,10 @@ $api = app('Dingo\Api\Routing\Router');
 $api->version('v1', function ($api) {
     $api->group(['prefix' => config('user.namespace')], function ($api) {
         // Auth
-        $api->post('register', 'VCComponent\Laravel\User\Http\Controllers\Frontend\UserController@store');
-        $api->post('login', 'VCComponent\Laravel\User\Http\Controllers\AuthController@authenticate');
-        $api->post('login/social', 'VCComponent\Laravel\User\Http\Controllers\AuthController@socialLogin');
-        $api->get('me', 'VCComponent\Laravel\User\Http\Controllers\AuthController@me');
+        $api->post('register', 'VCComponent\Laravel\User\Contracts\FrontendUserController@store');
+        $api->post('login', 'VCComponent\Laravel\User\Contracts\Auth@authenticate');
+        $api->post('login/social', 'VCComponent\Laravel\User\Contracts\Auth@socialLogin');
+        $api->get('me', 'VCComponent\Laravel\User\Contracts\Auth@me');
         $api->post('password/email', 'VCComponent\Laravel\User\Http\Controllers\ForgotPasswordController@sendResetLinkEmail');
         $api->put('password/reset', 'VCComponent\Laravel\User\Http\Controllers\ResetPasswordController@reset');
 

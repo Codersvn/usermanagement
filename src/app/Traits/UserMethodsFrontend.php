@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use VCComponent\Laravel\User\Contracts\UserValidatorInterface;
 use VCComponent\Laravel\User\Entities\UserMeta;
 use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
 use VCComponent\Laravel\User\Events\UserRegisteredEvent;
@@ -17,11 +18,10 @@ use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
 use VCComponent\Laravel\User\Notifications\UserRegisteredNotification;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
-use VCComponent\Laravel\User\Validators\UserValidator;
 
 trait UserMethodsFrontend
 {
-    public function __construct(UserRepository $repository, UserValidator $validator)
+    public function __construct(UserRepository $repository, UserValidatorInterface $validator)
     {
         $this->repository = $repository;
         $this->validator  = $validator;

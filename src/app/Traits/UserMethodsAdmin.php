@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Event;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use VCComponent\Laravel\User\Contracts\UserValidatorInterface;
 use VCComponent\Laravel\User\Entities\UserMeta;
 use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
@@ -13,11 +14,10 @@ use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
-use VCComponent\Laravel\User\Validators\UserValidator;
 
 trait UserMethodsAdmin
 {
-    public function __construct(UserRepository $repository, UserValidator $validator)
+    public function __construct(UserRepository $repository, UserValidatorInterface $validator)
     {
         $this->repository = $repository;
         $this->validator  = $validator;
