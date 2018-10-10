@@ -9,6 +9,7 @@ class AuthValidator extends AbstractValidator
 {
     protected $rules = [
         'LOGIN'        => [
+            'email'    => ['required', 'email'],
             'password' => ['required', 'min:6'],
         ],
         'SOCIAL_LOGIN' => [
@@ -16,12 +17,4 @@ class AuthValidator extends AbstractValidator
             'access_token' => ['required'],
         ],
     ];
-
-    public function __construct()
-    {
-        $credentialField = VCCAuth::getCredentialField();
-        $credentialRule  = VCCAuth::getCredentialRule();
-
-        $this->rules['LOGIN'][$credentialField] = $credentialRule;
-    }
 }

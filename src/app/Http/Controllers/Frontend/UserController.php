@@ -14,5 +14,4 @@ class UserController extends ApiController implements FrontendUserController
     private $repository;
     private $validator;
     private $transformer;
-    private $credential;
 }

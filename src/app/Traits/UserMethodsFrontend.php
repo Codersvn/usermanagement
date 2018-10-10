@@ -41,8 +41,6 @@ trait UserMethodsFrontend
         } else {
             $this->transformer = UserTransformer::class;
         }
-
-        $this->credential = VCCAuth::getCredentialField();
     }
 
     /**
@@ -111,9 +109,8 @@ trait UserMethodsFrontend
 
         $this->validator->isValid($data['default'], 'RULE_CREATE');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
-        if (!$this->repository->findByField($this->credential, $request->get($this->credential))->isEmpty()) {
-            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
-        }
+
+        VCCAuth::isEmpty($request);
 
         $user = $this->repository->create($data['default']);
 
@@ -193,6 +190,8 @@ trait UserMethodsFrontend
 
         $this->validator->isValid($request, 'RULE_UPDATE');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
+
+        VCCAuth::isExists($request, $id);
 
         $user = $this->repository->update($data['default'], $id);
 

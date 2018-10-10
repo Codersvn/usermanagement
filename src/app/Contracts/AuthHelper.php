@@ -2,9 +2,11 @@
 
 namespace VCComponent\Laravel\User\Contracts;
 
+use Illuminate\Http\Request;
+
 interface AuthHelper
 {
-    public function getCredentialField();
-    public function getCredentialRule();
-    public function checkExistence($repository, $credentials);
+    public function parseRequest(Request $request);
+    public function isEmpty(Request $request);
+    public function isExists(Request $request, $id);
 }

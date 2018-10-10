@@ -39,22 +39,14 @@ trait Authenticate
 
     public function authenticate(Request $request)
     {
-        $credentialField = VCCAuth::getCredentialField();
-        $credentials     = $request->only($credentialField, 'password');
-        $this->validator->isValid($credentials, 'LOGIN');
-
         try {
-            $user = VCCAuth::checkExistence($this->repository, $credentials);
+            $user = VCCAuth::parseRequest($request);
 
-            if (!$user) {
-                throw new NotFoundException(ucfirst(str_replace('_', ' ', $credentialField)));
-            }
-
-            if (!Hash::check($credentials['password'], $user->password)) {
+            if (!Hash::check($request->get('password'), $user->password)) {
                 throw new Exception("Password does not match", 1003);
             }
 
-            $token = JWTAuth::attempt($credentials);
+            $token = JWTAuth::fromUser($user);
 
             Event::fire(new UserLoggedInEvent($user));
 

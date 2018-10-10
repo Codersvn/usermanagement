@@ -42,20 +42,20 @@ class UserRepositoryEloquent extends BaseRepository implements UserRepository, C
         $this->pushCriteria(app(RequestCriteria::class));
     }
 
-    public function existsCredential($id, $value)
-    {
-        $credential = VCCAuth::getCredentialField();
+    // public function existsCredential($id, $value)
+    // {
+    //     $credential = VCCAuth::getCredentialField();
 
-        $user = $this->findWhere([
-            $credential => $value,
-            ['id', '!=', $id],
-        ])->first();
-        if (!$user) {
-            return false;
-        } else {
-            return $user;
-        }
-    }
+    //     $user = $this->findWhere([
+    //         $credential => $value,
+    //         ['id', '!=', $id],
+    //     ])->first();
+    //     if (!$user) {
+    //         return false;
+    //     } else {
+    //         return $user;
+    //     }
+    // }
 
     public function verifyEmail($user)
     {

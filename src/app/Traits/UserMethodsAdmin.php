@@ -28,8 +28,6 @@ trait UserMethodsAdmin
         } else {
             $this->transformer = UserTransformer::class;
         }
-
-        $this->credential = VCCAuth::getCredentialField();
     }
 
     /**
@@ -103,9 +101,8 @@ trait UserMethodsAdmin
 
         $this->validator->isValid($data['default'], 'ADMIN_CREATE_USER');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
-        if (!$this->repository->findByField($this->credential, $request->get($this->credential))->isEmpty()) {
-            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
-        }
+
+        VCCAuth::isEmpty($request);
 
         $user = $this->repository->create($data['default']);
 
@@ -182,10 +179,7 @@ trait UserMethodsAdmin
         $this->validator->isValid($data['default'], 'ADMIN_UPDATE_USER');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
 
-        $existsCredential = $this->repository->existsCredential($id, $request->get($this->credential));
-        if ($existsCredential) {
-            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
-        }
+        VCCAuth::isExists($request, $id);
 
         $user = $this->repository->update($data['default'], $id);
 
