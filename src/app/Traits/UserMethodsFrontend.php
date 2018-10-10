@@ -15,6 +15,7 @@ use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
 use VCComponent\Laravel\User\Events\UserRegisteredEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
+use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Notifications\UserRegisteredNotification;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
@@ -41,11 +42,7 @@ trait UserMethodsFrontend
             $this->transformer = UserTransformer::class;
         }
 
-        if (config('user.auth.credential') !== null) {
-            $this->credential = config('user.auth.credential');
-        } else {
-            $this->credential = 'email';
-        }
+        $this->credential = VCCAuth::getCredentialField();
     }
 
     /**

@@ -11,6 +11,7 @@ use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
+use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
 
@@ -28,11 +29,7 @@ trait UserMethodsAdmin
             $this->transformer = UserTransformer::class;
         }
 
-        if (config('user.auth.credential') !== null) {
-            $this->credential = config('user.auth.credential');
-        } else {
-            $this->credential = 'email';
-        }
+        $this->credential = VCCAuth::getCredentialField();
     }
 
     /**

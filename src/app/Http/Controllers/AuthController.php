@@ -14,5 +14,4 @@ class AuthController extends ApiController implements UserAuthContract
     private $validator;
     private $entity;
     private $transformer;
-    private $credential;
 }

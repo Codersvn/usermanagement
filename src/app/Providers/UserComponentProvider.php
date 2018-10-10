@@ -4,8 +4,10 @@ namespace VCComponent\Laravel\User\Providers;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
+use VCComponent\Laravel\User\Auth\Auth as AuthHelper;
 use VCComponent\Laravel\User\Contracts\AdminUserController;
 use VCComponent\Laravel\User\Contracts\Auth;
+use VCComponent\Laravel\User\Contracts\AuthHelper as AuthHelperContract;
 use VCComponent\Laravel\User\Contracts\FrontendUserController;
 use VCComponent\Laravel\User\Contracts\UserValidatorInterface;
 use VCComponent\Laravel\User\Http\Controllers\Admin\UserController as AdminController;
@@ -23,6 +25,7 @@ class UserComponentProvider extends ServiceProvider
     private $frontendController;
     private $authController;
     private $userValidator;
+    private $auth;
 
     /**
      * Register any application services.
@@ -55,12 +58,20 @@ class UserComponentProvider extends ServiceProvider
             $this->userValidator = config('user.validators.user');
         }
 
+        if (config('user.auth') === null) {
+            $this->auth = AuthHelper::class;
+        } else {
+            $this->auth = config('user.auth');
+        }
+
         App::bind(UserRepository::class, UserRepositoryEloquent::class);
         App::bind(StatusRepository::class, StatusRepositoryEloquent::class);
         App::bind(AdminUserController::class, $this->adminController);
         App::bind(FrontendUserController::class, $this->frontendController);
         App::bind(Auth::class, $this->authController);
         App::bind(UserValidatorInterface::class, $this->userValidator);
+        App::bind('vcc.auth', AuthHelperContract::class);
+        App::bind(AuthHelperContract::class, $this->auth);
     }
 
     /**

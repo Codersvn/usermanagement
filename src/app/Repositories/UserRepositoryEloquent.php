@@ -7,6 +7,7 @@ use Prettus\Repository\Criteria\RequestCriteria;
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Traits\CacheableRepository;
 use VCComponent\Laravel\User\Entities\User;
+use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Repositories\CanFlushCache;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 
@@ -43,11 +44,7 @@ class UserRepositoryEloquent extends BaseRepository implements UserRepository, C
 
     public function existsCredential($id, $value)
     {
-        if (config('user.auth.credential') !== null) {
-            $credential = config('user.auth.credential');
-        } else {
-            $credential = 'email';
-        }
+        $credential = VCCAuth::getCredentialField();
 
         $user = $this->findWhere([
             $credential => $value,

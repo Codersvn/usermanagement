@@ -18,9 +18,6 @@ return [
         'user' => VCComponent\Laravel\User\Validators\UserValidator::class,
     ],
 
-    'auth'         => [
-        'credential' => 'email',
-        'rule'       => ['required', 'email'],
-    ],
+    'auth'         => VCComponent\Laravel\User\Auth\Auth::class,
 
 ];
