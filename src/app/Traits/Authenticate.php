@@ -16,6 +16,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use VCComponent\Laravel\User\Events\UserLoggedInEvent;
 use VCComponent\Laravel\User\Events\UserRegisteredBySocialAccountEvent;
 use VCComponent\Laravel\User\Exceptions\NotFoundException;
+use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
 use VCComponent\Laravel\User\Validators\AuthValidator;
@@ -34,31 +35,14 @@ trait Authenticate
         } else {
             $this->transformer = UserTransformer::class;
         }
-
-        if (config('user.auth.credential') !== null) {
-            $this->credential = config('user.auth.credential');
-        } else {
-            $this->credential = 'email';
-        }
     }
 
     public function authenticate(Request $request)
     {
-        $credentials = $request->only($this->credential, 'password');
-        $this->validator->isValid($credentials, 'LOGIN');
-
         try {
-            $user = $this->repository->findByField($this->credential, $credentials[$this->credential])->first();
+            $user = VCCAuth::authenticate($request);
 
-            if (!$user) {
-                throw new NotFoundException(ucfirst(str_replace('_', ' ', $this->credential)));
-            }
-
-            if (!Hash::check($credentials['password'], $user->password)) {
-                throw new Exception("Password does not match", 1003);
-            }
-
-            $token = JWTAuth::attempt($credentials);
+            $token = JWTAuth::fromUser($user);
 
             Event::fire(new UserLoggedInEvent($user));
 

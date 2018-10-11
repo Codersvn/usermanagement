@@ -15,6 +15,7 @@ use VCComponent\Laravel\User\Events\UserEmailVerifiedEvent;
 use VCComponent\Laravel\User\Events\UserRegisteredEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
+use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Notifications\UserRegisteredNotification;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
@@ -39,12 +40,6 @@ trait UserMethodsFrontend
             $this->transformer = config('user.transformers.user');
         } else {
             $this->transformer = UserTransformer::class;
-        }
-
-        if (config('user.auth.credential') !== null) {
-            $this->credential = config('user.auth.credential');
-        } else {
-            $this->credential = 'email';
         }
     }
 
@@ -114,9 +109,8 @@ trait UserMethodsFrontend
 
         $this->validator->isValid($data['default'], 'RULE_CREATE');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
-        if (!$this->repository->findByField($this->credential, $request->get($this->credential))->isEmpty()) {
-            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
-        }
+
+        VCCAuth::isEmpty($request);
 
         $user = $this->repository->create($data['default']);
 
@@ -196,6 +190,8 @@ trait UserMethodsFrontend
 
         $this->validator->isValid($request, 'RULE_UPDATE');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
+
+        VCCAuth::isExists($request, $id);
 
         $user = $this->repository->update($data['default'], $id);
 

@@ -11,6 +11,7 @@ use VCComponent\Laravel\User\Events\UserCreatedByAdminEvent;
 use VCComponent\Laravel\User\Events\UserDeletedEvent;
 use VCComponent\Laravel\User\Events\UserUpdatedByAdminEvent;
 use VCComponent\Laravel\User\Exceptions\PermissionDeniedException;
+use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
 
@@ -26,12 +27,6 @@ trait UserMethodsAdmin
             $this->transformer = config('user.transformers.user');
         } else {
             $this->transformer = UserTransformer::class;
-        }
-
-        if (config('user.auth.credential') !== null) {
-            $this->credential = config('user.auth.credential');
-        } else {
-            $this->credential = 'email';
         }
     }
 
@@ -106,9 +101,8 @@ trait UserMethodsAdmin
 
         $this->validator->isValid($data['default'], 'ADMIN_CREATE_USER');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
-        if (!$this->repository->findByField($this->credential, $request->get($this->credential))->isEmpty()) {
-            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
-        }
+
+        VCCAuth::isEmpty($request);
 
         $user = $this->repository->create($data['default']);
 
@@ -185,10 +179,7 @@ trait UserMethodsAdmin
         $this->validator->isValid($data['default'], 'ADMIN_UPDATE_USER');
         $this->validator->isSchemaValid($data['schema'], $schema_rules);
 
-        $existsCredential = $this->repository->existsCredential($id, $request->get($this->credential));
-        if ($existsCredential) {
-            throw new ConflictHttpException(ucfirst(str_replace('_', ' ', $this->credential)) . ' already exist', null, 1001);
-        }
+        VCCAuth::isExists($request, $id);
 
         $user = $this->repository->update($data['default'], $id);
 

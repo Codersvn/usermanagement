@@ -16,11 +16,6 @@ return [
 
     'validators'   => [
         'user' => VCComponent\Laravel\User\Validators\UserValidator::class,
-    ],
-
-    'auth'         => [
-        'credential' => 'email',
-        'rule'       => ['required', 'email'],
-    ],
+    ]
 
 ];
