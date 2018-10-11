@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 interface AuthHelper
 {
-    public function parseRequest(Request $request);
+    public function authenticate(Request $request);
     public function isEmpty(Request $request);
     public function isExists(Request $request, $id);
 }

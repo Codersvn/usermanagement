@@ -4,6 +4,7 @@ namespace VCComponent\Laravel\User\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use VCComponent\Laravel\User\Contracts\AuthHelper as AuthHelperContract;
 use VCComponent\Laravel\User\Exceptions\NotFoundException;
@@ -21,7 +22,7 @@ class Auth implements AuthHelperContract
         $this->validator  = $validator;
     }
 
-    public function parseRequest(Request $request)
+    public function authenticate(Request $request)
     {
         $this->validator->isValid($request, 'LOGIN');
 
@@ -29,6 +30,10 @@ class Auth implements AuthHelperContract
 
         if (!$user) {
             throw new NotFoundException('Email');
+        }
+
+        if (!Hash::check($request->get('password'), $user->password)) {
+            throw new \Exception("Password does not match", 1003);
         }
 
         return $user;

@@ -40,11 +40,7 @@ trait Authenticate
     public function authenticate(Request $request)
     {
         try {
-            $user = VCCAuth::parseRequest($request);
-
-            if (!Hash::check($request->get('password'), $user->password)) {
-                throw new Exception("Password does not match", 1003);
-            }
+            $user = VCCAuth::authenticate($request);
 
             $token = JWTAuth::fromUser($user);
 
