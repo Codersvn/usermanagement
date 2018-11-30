@@ -11,8 +11,8 @@ class StatusController extends ApiController
 {
     use StatusMethodsAdmin;
 
-    private $repository;
-    private $validator;
+    protected $repository;
+    protected $validator;
 
     public function __construct(StatusRepository $repository, StatusValidator $validator)
     {
