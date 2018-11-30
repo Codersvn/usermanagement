@@ -11,7 +11,7 @@ class UserController extends ApiController implements AdminUserController
 {
     use UserMethodsAdmin;
 
-    private $repository;
-    private $validator;
-    private $transformer;
+    protected $repository;
+    protected $validator;
+    protected $transformer;
 }

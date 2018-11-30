@@ -10,8 +10,8 @@ class AuthController extends ApiController implements UserAuthContract
 {
     use Authenticate;
 
-    private $repository;
-    private $validator;
-    private $entity;
-    private $transformer;
+    protected $repository;
+    protected $validator;
+    protected $entity;
+    protected $transformer;
 }
