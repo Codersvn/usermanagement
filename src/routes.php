@@ -20,6 +20,8 @@ $api->version('v1', function ($api) {
         $api->post('login', 'VCComponent\Laravel\User\Contracts\Auth@authenticate');
         $api->post('login/social', 'VCComponent\Laravel\User\Contracts\Auth@socialLogin');
         $api->get('me', 'VCComponent\Laravel\User\Contracts\Auth@me');
+        $api->get('me/avatar', 'VCComponent\Laravel\User\Contracts\Auth@avatar');
+        $api->get('me/password', 'VCComponent\Laravel\User\Contracts\Auth@password');
         $api->post('password/email', 'VCComponent\Laravel\User\Http\Controllers\ForgotPasswordController@sendResetLinkEmail');
         $api->put('password/reset', 'VCComponent\Laravel\User\Http\Controllers\ResetPasswordController@reset');
 

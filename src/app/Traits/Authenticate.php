@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
@@ -20,6 +21,7 @@ use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
 use VCComponent\Laravel\User\Validators\AuthValidator;
+use Illuminate\Support\Facades\Hash;
 
 trait Authenticate
 {
@@ -142,5 +144,37 @@ trait Authenticate
         $token = JWTAuth::fromUser($user);
         Event::fire(new UserLoggedInEvent($user));
         return $this->response->array(compact('token'));
+    }
+
+    public function avatar()
+    {
+        $user = $this->getAuthenticatedUser();
+
+        $this->validator->isValid($request, 'RULE_UPDATE_AVATAR');
+
+        $data = $request->only('avatar');
+        $user = $this->repository->update($data, $user->id);
+
+        return $this->success();
+    }
+
+    public function password()
+    {
+        $user = $this->getAuthenticatedUser();
+
+        $this->validator->isValid($request, 'RULE_UPDATE_PASSWORD');
+
+        $data = $request->only(['old_password', 'new_password', 'new_password_confirmation']);
+        if (!Hash::check($data['old_password'], $user->password)) {
+            throw new BadRequestHttpException('Old password does not match');
+        }
+        if ($data['new_password'] !== $data['new_password_confirmation']) {
+            throw new BadRequestHttpException('Password is not confirmed');
+        }
+
+        $user->password = $data['new_password'];
+        $user->save();
+
+        return $this->success();
     }
 }
