@@ -4,30 +4,32 @@ The User Component package provides a convenient way of managing application's u
 
 ## Table of content
 
-- [Installation](#installation)
-    - [Composer](#composer)
-    - [Service provider](#service-provider)
-        - [Laravel](#laravel)
-        - [Lumen](#lumen)
-    - [Config and Migration](#config-and-migration)
-        - [Laravel](#laravel)
-        - [Lumen](#lumen)
-    - [Environment](#environment)
-- [Configuration](#configuration)
-    - [URL Namespace](#url-namespace)
-    - [User Model](#user-model)
-    - [User Transformer](#user-transformer)
-        - [Laravel](#laravel)
-        - [Lumen](#lumen)
-    - [Social Login](#social-login)
-- [User Model](#user-model)
-    - [User Schema](#user-schema)
-    - [User Management](#user-management)
-- [APIs List](#apis-list)
-- [Routing](#routing)
-    - [Custom Routing](#custom-routing)
-    - [Custom Controller](#custom-controller)
-- [Additional Configuration](#additional-configuration)
+- [User Component for Laravel and Lumen](#user-component-for-laravel-and-lumen)
+    - [Table of content](#table-of-content)
+    - [Installation](#installation)
+        - [Composer](#composer)
+        - [Service provider](#service-provider)
+            - [Laravel](#laravel)
+            - [Lumen](#lumen)
+        - [Config and Migration](#config-and-migration)
+            - [Laravel](#laravel-1)
+            - [Lumen](#lumen-1)
+        - [Environment](#environment)
+    - [Configuration](#configuration)
+        - [URL Namespace](#url-namespace)
+        - [User Model](#user-model)
+        - [User Transformer](#user-transformer)
+            - [Laravel](#laravel-2)
+            - [Lumen](#lumen-2)
+        - [Social login](#social-login)
+    - [User Model](#user-model-1)
+        - [User Schema](#user-schema)
+        - [User Management](#user-management)
+    - [APIs List](#apis-list)
+    - [Routing](#routing)
+        - [Custom Routing](#custom-routing)
+        - [Custom Controller](#custom-controller)
+    - [Additional Configuration](#additional-configuration)
 
 ## Installation
 
@@ -628,11 +630,13 @@ public function ableToUpdateProfile($id)
 Here is the list of APIs provided by the package.
 
 | Verb   | URI                                               | Action              |
-|--------|---------------------------------------------------|---------------------|
+| ------ | ------------------------------------------------- | ------------------- |
 | POST   | `/api/{namespace}/register`                       | register            |
 | POST   | `/api/{namespace}/login`                          | login               |
 | POST   | `/api/{namespace}/login/social`                   | social login        |
 | GET    | `/api/{namespace}/me`                             | get profile         |
+| GET    | `/api/{namespace}/me/avatar`                      | update avatar       |
+| GET    | `/api/{namespace}/me/password`                    | update password     |
 | POST   | `/api/{namespace}/password/email`                 | forgot password     |
 | PUT    | `/api/{namespace}/password/reset`                 | reset password      |
 | ------ | ------                                            | ------              |
