@@ -21,7 +21,6 @@ use VCComponent\Laravel\User\Facades\VCCAuth;
 use VCComponent\Laravel\User\Repositories\UserRepository;
 use VCComponent\Laravel\User\Transformers\UserTransformer;
 use VCComponent\Laravel\User\Validators\AuthValidator;
-use Illuminate\Support\Facades\Hash;
 
 trait Authenticate
 {
