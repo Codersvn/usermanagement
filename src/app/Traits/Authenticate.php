@@ -145,7 +145,7 @@ trait Authenticate
         return $this->response->array(compact('token'));
     }
 
-    public function avatar()
+    public function avatar(Request $request)
     {
         $user = $this->getAuthenticatedUser();
 
@@ -157,7 +157,7 @@ trait Authenticate
         return $this->success();
     }
 
-    public function password()
+    public function password(Request $request)
     {
         $user = $this->getAuthenticatedUser();
 
