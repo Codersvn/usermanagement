@@ -635,8 +635,8 @@ Here is the list of APIs provided by the package.
 | POST   | `/api/{namespace}/login`                          | login               |
 | POST   | `/api/{namespace}/login/social`                   | social login        |
 | GET    | `/api/{namespace}/me`                             | get profile         |
-| GET    | `/api/{namespace}/me/avatar`                      | update avatar       |
-| GET    | `/api/{namespace}/me/password`                    | update password     |
+| PUT    | `/api/{namespace}/me/avatar`                      | update avatar       |
+| PUT    | `/api/{namespace}/me/password`                    | update password     |
 | POST   | `/api/{namespace}/password/email`                 | forgot password     |
 | PUT    | `/api/{namespace}/password/reset`                 | reset password      |
 | ------ | ------                                            | ------              |
