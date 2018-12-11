@@ -3,10 +3,12 @@
 namespace VCComponent\Laravel\User\Events;
 
 use Illuminate\Queue\SerializesModels;
+use Vicoders\ActivityLog\Contracts\ActivityLogable;
+use Vicoders\ActivityLog\Traits\ActivityLogTrait;
 
-class UserCreatedByAdminEvent
+class UserCreatedByAdminEvent implements ActivityLogable
 {
-    use SerializesModels;
+    use SerializesModels, ActivityLogTrait;
 
     public $user;
 
@@ -18,5 +20,9 @@ class UserCreatedByAdminEvent
     public function __construct($user)
     {
         $this->user = $user;
+    }
+
+    public function getDescription() {
+        return "Admin tạo tài khoản với email: {$this->user->email}";
     }
 }

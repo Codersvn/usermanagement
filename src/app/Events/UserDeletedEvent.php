@@ -3,10 +3,12 @@
 namespace VCComponent\Laravel\User\Events;
 
 use Illuminate\Queue\SerializesModels;
+use Vicoders\ActivityLog\Contracts\ActivityLogable;
+use Vicoders\ActivityLog\Traits\ActivityLogTrait;
 
-class UserDeletedEvent
+class UserDeletedEvent implements ActivityLogable
 {
-    use SerializesModels;
+    use SerializesModels, ActivityLogTrait;
 
     public $user;
 
@@ -18,5 +20,10 @@ class UserDeletedEvent
     public function __construct($user)
     {
         $this->user = $user;
+    }
+
+    public function getDescription()
+    {
+        return "Admin xóa tài khoản: {$this->user->email}";
     }
 }
