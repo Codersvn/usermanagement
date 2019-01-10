@@ -51,7 +51,7 @@ class ResetPasswordController extends ApiController
 
     public function sendResetFailedResponse($response)
     {
-        throw new UnauthorizedHttpException('', "Token doesn't match or expired", null, 1003);
+        throw new UnauthorizedHttpException('', "Token doesn't match or expired", null, 2001);
     }
 
     protected function resetPassword($user, $password)
