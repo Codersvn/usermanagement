@@ -3,12 +3,10 @@
 namespace VCComponent\Laravel\User\Events;
 
 use Illuminate\Queue\SerializesModels;
-use Vicoders\ActivityLog\Contracts\ActivityLogable;
-use Vicoders\ActivityLog\Traits\ActivityLogTrait;
 
-class UserEmailVerifiedEvent implements ActivityLogable
+class UserEmailVerifiedEvent
 {
-    use SerializesModels, ActivityLogTrait;
+    use SerializesModels;
 
     public $user;
 
@@ -20,10 +18,5 @@ class UserEmailVerifiedEvent implements ActivityLogable
     public function __construct($user)
     {
         $this->user = $user;
-    }
-
-    public function getDescription()
-    {
-        return "Người dùng xác thực email: {$this->user->email}";
     }
 }

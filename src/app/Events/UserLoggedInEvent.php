@@ -3,12 +3,10 @@
 namespace VCComponent\Laravel\User\Events;
 
 use Illuminate\Queue\SerializesModels;
-use Vicoders\ActivityLog\Contracts\ActivityLogable;
-use Vicoders\ActivityLog\Traits\ActivityLogTrait;
 
-class UserLoggedInEvent implements ActivityLogable
+class UserLoggedInEvent
 {
-    use SerializesModels, ActivityLogTrait;
+    use SerializesModels;
 
     public $user;
 
@@ -22,8 +20,4 @@ class UserLoggedInEvent implements ActivityLogable
         $this->user = $user;
     }
 
-    public function getDescription()
-    {
-        return "Người dùng đăng nhập với email: {$this->user->email}";
-    }
 }
